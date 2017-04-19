@@ -2860,6 +2860,32 @@ public static partial class DataContractSerializerTests
         SerializationTestTypes.ComparisonHelper.CompareRecursively(value, actual);
     }
 
+    //[DataContractSerializer] This testcase covers the new behavior (or side effect) introduced in a fix on serialization collection. Here is the scenario:
+    //When a class CollOfString (which implements ICollection<string>) extends another class CollOfBoolBase (which implements ICollection<bool>),
+    //CollOfString is an invalid collection (due to multiple implmentation of different types of ICollection<T>).  If this CollOfString class also declaraed with
+    //[Serializable], DataContractSerializer will now try to serialize CollOfString as a regular Serializable class instead of a collection type.
+    //Note that in 4.0 or before, the serializer throws an exception on serialize.
+    [Fact]
+    public static void DCS_MultipleICollectionWithSerializable()
+    {
+        string baseline = @"<CollOfString xmlns=""http://schemas.datacontract.org/2004/07/SerializationTestTypes"" xmlns:i=""http://www.w3.org/2001/XMLSchema-instance""><_stringField>stringField</_stringField></CollOfString>";
+        var value = new SerializationTestTypes.CollOfString();
+        var actual = SerializeAndDeserialize(value, baseline);
+
+        Assert.Equal(value, actual);
+    }
+
+    // [DataContractSerializer] Trying to serialized an invalid collection (without a default constructor) and the class should be treated as a regular serializable type
+    [Fact]
+    public static void DCS_NoDefaultConstructorList()
+    {
+        string baseline = @"<DerivedFromBaseList xmlns=""http://schemas.datacontract.org/2004/07/SerializationTestTypes"" xmlns:i=""http://www.w3.org/2001/XMLSchema-instance""><_items xmlns=""http://schemas.microsoft.com/2003/10/Serialization/Arrays""/><_size xmlns=""http://schemas.microsoft.com/2003/10/Serialization/Arrays"">0</_size><_version xmlns=""http://schemas.microsoft.com/2003/10/Serialization/Arrays"">0</_version><_str>abc</_str></DerivedFromBaseList>";
+        var value = new SerializationTestTypes.DerivedFromBaseList("abc");
+        var actual = SerializeAndDeserialize(value, baseline);
+
+        Assert.Equal(value, actual);
+    }
+
     #endregion
 
     private static T SerializeAndDeserialize<T>(T value, string baseline, DataContractSerializerSettings settings = null, Func<DataContractSerializer> serializerFactory = null, bool skipStringCompare = false)
