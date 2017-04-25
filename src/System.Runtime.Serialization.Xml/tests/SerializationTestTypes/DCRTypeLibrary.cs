@@ -1,4 +1,5 @@
-﻿using System.Runtime.Serialization;
+﻿using System;
+using System.Runtime.Serialization;
 
 namespace SerializationTestTypes
 {
@@ -27,4 +28,21 @@ namespace SerializationTestTypes
             get { return _data2; }
         }
     }
+
+    [DataContract]
+    public class DelegateClass
+    {
+        public DelegateClass() { }
+
+        [DataMember]
+        public object container;
+
+        [DataMember]
+        public static string delegateVariable = "";
+
+        [DataMember]
+        public static object someType;
+    }
+
+    public delegate void Del(Person p);
 }

@@ -86,4 +86,26 @@ namespace SerializationTestTypes
             return knownTypeResolver.TryResolveType(actualDataContractType, declaredType, null, out typeName, out typeNamespace);
         }
     }
+
+    public class VerySimpleResolver : DataContractResolver
+    {
+        public override bool TryResolveType(Type dcType, Type declaredType, DataContractResolver KTResolver, out XmlDictionaryString typeName, out XmlDictionaryString typeNamespace)
+        {
+            if (!KTResolver.TryResolveType(dcType, declaredType, null, out typeName, out typeNamespace))
+            {
+                typeName = new XmlDictionary().Add(dcType.FullName);
+                typeNamespace = new XmlDictionary().Add(dcType.Assembly.FullName);
+            }
+            return true;
+        }
+        public override Type ResolveName(string typeName, string typeNamespace, Type declaredType, DataContractResolver KTResolver)
+        {
+            Type t = KTResolver.ResolveName(typeName, typeNamespace, declaredType, null);
+            if (t == null)
+            {
+                t = Type.GetType(typeName + "," + typeNamespace);
+            }
+            return t;
+        }
+    }
 }
