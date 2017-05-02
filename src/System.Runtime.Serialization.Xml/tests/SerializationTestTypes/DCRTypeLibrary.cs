@@ -167,4 +167,64 @@ namespace SerializationTestTypes
             set { dataContractResolverTypes = value; }
         }
     }
+
+    [Serializable]
+    public class Singleton:ISerializable
+    {
+        private static readonly Singleton s_theOneObject = new Singleton();
+
+        private string _someString;
+        private int _someNumber;
+
+        public string SomeString_value
+        {
+            get
+            {
+                return _someString;
+            }
+
+            set
+            {
+                _someString = value;
+            }
+        }
+
+        public int SomeNumber_value
+        {
+            get
+            {
+                return _someNumber;
+            }
+
+            set
+            {
+                _someNumber = value;
+            }
+        }
+
+        private Singleton()
+        {
+            _someString = "this is a string field";
+            _someNumber = 123;
+        }
+
+        public static Singleton GetSingleton()
+        {
+            return s_theOneObject;
+        }
+
+        public void GetObjectData(SerializationInfo info, StreamingContext context)
+        {
+            info.SetType(typeof(SingletonSerializationHelper));
+        }
+    }
+
+    [Serializable]
+    public class SingletonSerializationHelper : IObjectReference
+    {
+        public object GetRealObject(StreamingContext context)
+        {
+            return Singleton.GetSingleton();
+        }
+    }
 }

@@ -14,6 +14,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.Serialization;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Runtime.Serialization.Json;
 using System.Text;
 using System.Xml;
@@ -3124,6 +3125,34 @@ public static partial class DataContractSerializerTests
                 }
             }
         }
+    }
+
+    [Fact]
+    public static void DCS_ObjectWithIObjectReference()
+    {
+        Singleton[] a1 = { Singleton.GetSingleton(), Singleton.GetSingleton() };
+        Assert.Equal(a1[0], a1[1]);
+
+        //BinaryFormatter
+        MemoryStream ms1 = new MemoryStream();
+        BinaryFormatter formatter = new BinaryFormatter();
+        formatter.Serialize(ms1, a1);
+        ms1.Position = 0;
+        Singleton[] a2 = (Singleton[])formatter.Deserialize(ms1);
+
+        Assert.Equal(a2[0], a1[0]);
+        Assert.Equal(a2[1], a1[1]);
+
+        //XmlSerializer
+        MemoryStream ms2 = new MemoryStream();
+        System.Xml.Serialization.XmlSerializer xmlser = new System.Xml.Serialization.XmlSerializer(typeof(Singleton[]));
+        xmlser.Serialize(ms2, a1);
+        ms2.Position = 0;
+        Singleton[] a3 = (Singleton[])xmlser.Deserialize(ms2);
+        // If this result is expected ?
+        Assert.NotEqual(a3[0], a3[1]);
+        Assert.NotEqual(a3[0], a1[0]);
+        Assert.NotEqual(a3[1], a1[1]);
     }
 
     private static T SerializeAndDeserialize<T>(T value, string baseline, DataContractSerializerSettings settings = null, Func<DataContractSerializer> serializerFactory = null, bool skipStringCompare = false)
