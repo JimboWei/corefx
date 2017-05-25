@@ -9,6 +9,7 @@ using System.ComponentModel;
 using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
+using System.Runtime.Serialization.Json;
 using System.Xml;
 using System.Xml.Linq;
 using System.Xml.Schema;
@@ -5287,4 +5288,43 @@ public class Invalid_Class_KnownType_Invalid_Type
     }
 }
 
+public class Invalid_Class_No_Parameterless_Ctor
+{
+    public Invalid_Class_No_Parameterless_Ctor(string id)
+    {
+        ID = id;
+    }
+    public string ID { get; set; }
+}
+
+
+public class NativeJsonTestData
+{
+    public static NativeJsonTestData[] Json_InvalidTypes = new NativeJsonTestData[] {
+            new NativeJsonTestData(typeof(Invalid_Class_No_Parameterless_Ctor),
+                        () => new Invalid_Class_No_Parameterless_Ctor("test")),
+            new NativeJsonTestData(typeof(Invalid_Class_Derived_With_DataContract),
+                        () => new Invalid_Class_Derived_With_DataContract()),
+        };
+
+    // This list exists solely to expose all the root objects being serialized.
+    // Without this ILC removes our test data types
+    // All new test data types *must* be added to one of these lists to appear to the ILC.
+    // Test data now added here will result in "serializer not found" exception at runtime.
+    public static DataContractJsonSerializer[] JsonSerializers = new DataContractJsonSerializer[]
+        {
+            new DataContractJsonSerializer(typeof(Invalid_Class_No_Parameterless_Ctor)),
+            new DataContractJsonSerializer(typeof(List<Invalid_Class_No_Parameterless_Ctor>)),
+            new DataContractJsonSerializer(typeof(Invalid_Class_Derived_With_DataContract)),
+        };
+
+    public NativeJsonTestData(Type type, Func<object> instantiate)
+    {
+        Type = type;
+        Instantiate = instantiate;
+    }
+
+    public Type Type { get; set; }
+    public Func<object> Instantiate { get; set; }
+}
 #endregion
