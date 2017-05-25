@@ -17,6 +17,7 @@ using System.Xml.Serialization;
 using System.IO;
 using System.Text;
 using System.Reflection;
+using System.Threading.Tasks;
 
 namespace SerializationTypes
 {
@@ -2971,6 +2972,30 @@ namespace SerializationTypes
             return obj;
         }
     }
+    
+    public class NookAppLocalState
+    {
+        public int ArticleViewCount { get; set; }
+        public string CurrentlyReadingProductEAN { get; set; }
+        public PaymentType CurrentPaymentType { get; set; }
+        public bool IsFirstRun { get; set; }
+        public List<LocalReadingPosition> LocalReadingPositionState { get; set; }
+        public List<string> PreviousSearchQueries { get; set; }
+
+        public System.Drawing.Color TextColor;
+
+        [XmlIgnore]
+        public int IgnoreProperty;
+
+        public bool IsFirstRunDuplicate { get; set; }
+        // Nested Types
+        public enum PaymentType
+        {
+            Unconfigured,
+            Nook,
+            Microsoft
+        }
+    }
 }
 
 namespace DuplicateTypeNamesTest.ns1
@@ -5328,3 +5353,16 @@ public class NativeJsonTestData
     public Func<object> Instantiate { get; set; }
 }
 #endregion
+
+namespace DirectRef
+{
+    public class TypeWithIndirectRef
+    {
+        public static implicit operator Task<object>(TypeWithIndirectRef v)
+        {
+            throw new NotImplementedException();
+        }
+
+        public string Name { get; set; }
+    }
+}

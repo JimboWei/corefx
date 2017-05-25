@@ -4322,7 +4322,139 @@ string.Format(@"<?xml version=""1.0"" encoding=""utf-8""?>
         var myGroup4 = new Group4WithXmlTextAttr();
         Assert.Throws<InvalidOperationException>(() => { SerializeAndDeserialize(myGroup4, null, null, true); });
     }
+    
+    [Fact]
+    public static void Xml_DefaultNamespaceChange_ObjectAsRoot()
+    {
+        object value = ItemChoiceType.DecimalNumber;
+        var actual = SerializeAndDeserialize(value,
+            @"<?xml version=""1.0"" encoding=""utf-8""?>
+<anyType p1:type=""ItemChoiceType"" xmlns:p1=""http://www.w3.org/2001/XMLSchema-instance"" xmlns=""MycustomDefaultNamespace"">DecimalNumber</anyType>",
+            () => { return new XmlSerializer(typeof(object), "MycustomDefaultNamespace"); });
 
+        Assert.StrictEqual(value, actual);
+    }
+
+    [Fact]
+    public static void Xml_DefaultNamespaceChange_SimpleArray_ObjectAsRoot()
+    {
+        SimpleType[] x = new SimpleType[] { new SimpleType { P1 = "abc", P2 = 11 }, new SimpleType { P1 = "def", P2 = 12 } };
+        SimpleType[] y = SerializeAndDeserialize(x,
+@"<?xml version=""1.0""?>
+<anyType d1p1:type=""ArrayOfSimpleType"" xmlns:d1p1=""http://www.w3.org/2001/XMLSchema-instance"" xmlns=""MycustomDefaultNamespace"">
+  <SimpleType xmlns:xsd=""http://www.w3.org/2001/XMLSchema"">
+    <P1>abc</P1>
+    <P2>11</P2>
+  </SimpleType>
+  <SimpleType>
+    <P1>def</P1>
+    <P2>12</P2>
+  </SimpleType>
+</anyType>",
+            () => { return new XmlSerializer(typeof(object), "MycustomDefaultNamespace"); });
+
+        Utils.Equal(x, y, (a, b) => { return SimpleType.AreEqual(a, b); });
+    }
+
+    [Fact]
+    public static void Xml_DefaultNamespaceChange_XmlAttributesTestAsRoot()
+    {
+        var value = new XmlSerializerAttributes();
+        var actual = SerializeAndDeserialize(value,
+@"<?xml version=""1.0""?>
+<AttributeTesting xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance"" xmlns:xsd=""http://www.w3.org/2001/XMLSchema"" XmlAttributeName=""2"" xmlns=""MycustomDefaultNamespace"">
+  <Word>String choice value</Word>
+  <XmlIncludeProperty xsi:type=""ItemChoiceType"">DecimalNumber</XmlIncludeProperty>
+  <XmlEnumProperty>
+    <ItemChoiceType>DecimalNumber</ItemChoiceType>
+    <ItemChoiceType>Number</ItemChoiceType>
+    <ItemChoiceType>Word</ItemChoiceType>
+    <ItemChoiceType>None</ItemChoiceType>
+  </XmlEnumProperty>&lt;xml&gt;Hello XML&lt;/xml&gt;<XmlNamespaceDeclarationsProperty>XmlNamespaceDeclarationsPropertyValue</XmlNamespaceDeclarationsProperty><XmlElementPropertyNode xmlns=""http://element"">1</XmlElementPropertyNode><CustomXmlArrayProperty xmlns=""http://mynamespace""><string>one</string><string>two</string><string>three</string></CustomXmlArrayProperty></AttributeTesting>",
+            () => { return new XmlSerializer(typeof(XmlSerializerAttributes), "MycustomDefaultNamespace"); });
+
+        Assert.StrictEqual(value.EnumType, actual.EnumType);
+        Assert.StrictEqual(value.MyChoice, actual.MyChoice);
+        Assert.Equal(value.XmlArrayProperty, actual.XmlArrayProperty);
+        Assert.StrictEqual(value.XmlAttributeProperty, actual.XmlAttributeProperty);
+        Assert.StrictEqual(value.XmlElementProperty, actual.XmlElementProperty);
+        Assert.Equal(value.XmlEnumProperty, actual.XmlEnumProperty);
+        Assert.StrictEqual(value.XmlIncludeProperty, actual.XmlIncludeProperty);
+        Assert.StrictEqual(value.XmlNamespaceDeclarationsProperty, actual.XmlNamespaceDeclarationsProperty);
+        Assert.StrictEqual(value.XmlTextProperty, actual.XmlTextProperty);
+    }
+
+    [Fact]
+    public static void Xml_TypeWithIndirectReferencedAssembly()
+    {
+        // TypeWithIndirectRef class has a dependency on Task, which is in System.Threading.Tasks, an assembly that's indirectly referenced.
+        var value = new DirectRef.TypeWithIndirectRef() { Name = "Foo" };
+        var actual = SerializeAndDeserialize(value, @"<?xml version=""1.0""?>
+<TypeWithIndirectRef xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance"" xmlns:xsd=""http://www.w3.org/2001/XMLSchema"">
+  <Name>Foo</Name>
+</TypeWithIndirectRef>");
+        Assert.StrictEqual(value.Name, actual.Name);
+    }
+
+    [Fact]
+    public static void Xml_DerivedTypeWithDifferentOverrides()
+    {
+        DerivedTypeWithDifferentOverrides value = new DerivedTypeWithDifferentOverrides() { Name1 = "Name1", Name2 = "Name2", Name3 = "Name3", Name4 = "Name4", Name5 = "Name5" };
+        DerivedTypeWithDifferentOverrides actual = SerializeAndDeserialize<DerivedTypeWithDifferentOverrides>(value,
+@"<?xml version=""1.0""?>
+<DerivedTypeWithDifferentOverrides xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance"" xmlns:xsd=""http://www.w3.org/2001/XMLSchema"">
+  <Name1>Name1</Name1>
+  <Name2>Name2</Name2>
+  <Name3>Name3</Name3>
+  <Name5>Name5</Name5>
+</DerivedTypeWithDifferentOverrides>");
+        Assert.StrictEqual(value.Name1, actual.Name1);
+        Assert.StrictEqual(value.Name2, actual.Name2);
+        Assert.StrictEqual(value.Name3, actual.Name3);
+        Assert.Null(actual.Name4);
+        Assert.StrictEqual(value.Name5, actual.Name5);
+    }
+
+    [Fact]
+    public static void Xml_ValidateExceptionOnUnspecifiedRootSerializationType()
+    {
+        var serializer = new XmlSerializer(Type.GetType(typeof(UnspecifiedRootSerializationType).FullName));
+        Assert.Throws<InvalidOperationException>(() =>
+        {
+            serializer.Serialize(new MemoryStream(), new UnspecifiedRootSerializationType());
+        });
+    }
+
+    // This test covers all the compilation error which is caused by the types that XmlSerializer does not support
+    [Fact]
+    public static void Xml_VerifyCompilationIssueOnly()
+    {
+        XmlSerializer serializerA = new XmlSerializer(typeof(TypeWithEnumerableMembers));
+        XmlSerializer serializerB = new XmlSerializer(typeof(TypeWithoutPublicSetter));
+        XmlSerializer serializerC = new XmlSerializer(typeof(TypeWithCompilerGeneratedAttributeButWithoutPublicSetter));
+        XmlSerializer serializerD = new XmlSerializer(typeof(InvalidDerivedClass));
+        XmlSerializer serializerE = new XmlSerializer(typeof(AnotherInvalidDerivedClass));
+        XmlSerializer serializerF = new XmlSerializer(typeof(DuplicateTypeNamesTest.ns1.ClassA));
+        XmlSerializer serializerG = new XmlSerializer(typeof(DuplicateTypeNamesTest.ns2.ClassA));
+        XmlSerializer serializerH = new XmlSerializer(typeof(InternalTypeWithNestedPublicType.LevelData));
+        XmlSerializer serializerI = new XmlSerializer(typeof(InternalTypeWithNestedPublicTypeWithNestedPublicType.NestedPublicType.LevelData));
+    }
+
+    [Fact]
+    public static void Xml_NookTypes()
+    {
+        NookAppLocalState value = new NookAppLocalState() { ArticleViewCount = 1, CurrentlyReadingProductEAN = "Current", CurrentPaymentType = NookAppLocalState.PaymentType.Microsoft, IsFirstRun = true, PreviousSearchQueries = new List<string>(new string[] { "one", "two" }), TextColor = System.Drawing.Color.FromArgb(3, 4, 5, 6) };
+        value.LocalReadingPositionState = new List<LocalReadingPosition>();
+        value.LocalReadingPositionState.Add(new LocalReadingPosition() { Ean = "Ean", LastReadTime = new DateTime(2013, 1, 2), PageCount = 1, PageNumber = "1", PlatformOffset = "offset" });
+
+        var deserializedValue = SerializeAndDeserialize<NookAppLocalState>(value, "<?xml version=\"1.0\"?>\r\n<NookAppLocalState xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\">\r\n  <TextColor>\r\n    <A>3</A>\r\n    <B>6</B>\r\n    <G>5</G>\r\n    <R>4</R>\r\n  </TextColor>\r\n  <ArticleViewCount>1</ArticleViewCount>\r\n  <CurrentlyReadingProductEAN>Current</CurrentlyReadingProductEAN>\r\n  <CurrentPaymentType>Microsoft</CurrentPaymentType>\r\n  <IsFirstRun>true</IsFirstRun>\r\n  <LocalReadingPositionState>\r\n    <LocalReadingPosition>\r\n      <Ean>Ean</Ean>\r\n      <LastReadTime>2013-01-02T00:00:00</LastReadTime>\r\n      <PageCount>1</PageCount>\r\n      <PageNumber>1</PageNumber>\r\n      <PlatformOffset>offset</PlatformOffset>\r\n    </LocalReadingPosition>\r\n  </LocalReadingPositionState>\r\n  <PreviousSearchQueries>\r\n    <string>one</string>\r\n    <string>two</string>\r\n  </PreviousSearchQueries>\r\n  <IsFirstRunDuplicate>false</IsFirstRunDuplicate>\r\n</NookAppLocalState>", skipStringCompare: true);
+
+        Assert.StrictEqual(deserializedValue.ArticleViewCount, value.ArticleViewCount);
+        Assert.StrictEqual(deserializedValue.CurrentlyReadingProductEAN, value.CurrentlyReadingProductEAN);
+        Assert.StrictEqual(deserializedValue.CurrentPaymentType, value.CurrentPaymentType);
+        Assert.StrictEqual(deserializedValue.IsFirstRun, value.IsFirstRun);
+    }
+    
     private static readonly string s_defaultNs = "http://tempuri.org/";
     private static T RoundTripWithXmlMembersMapping<T>(object requestBodyValue, string memberName, string baseline, bool skipStringCompare = false, string wrapperName = null)
     {

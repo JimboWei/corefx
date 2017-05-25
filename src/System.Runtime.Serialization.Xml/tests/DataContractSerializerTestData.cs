@@ -10,16 +10,6 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Runtime.InteropServices;
 
-// Invalid because there is no parameterless ctor
-public class Invalid_Class_No_Parameterless_Ctor
-{
-    public Invalid_Class_No_Parameterless_Ctor(string id)
-    {
-        ID = id;
-    }
-    public string ID { get; set; }
-}
-
 public class NativeDllWrapper
 {
 
