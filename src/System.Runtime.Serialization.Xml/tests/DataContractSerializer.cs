@@ -3141,6 +3141,81 @@ public static partial class DataContractSerializerTests
         Assert.Equal(value.emps[1].Name, actual.emps[1].Name);
     }
 
+    #region NetNative
+    [Fact]
+    public static void DCS_ValidateExceptionOnUnspecifiedRootSerializationType()
+    {
+        var serializer = new DataContractSerializer(Type.GetType(typeof(UnspecifiedRootSerializationType).FullName));
+        Assert.Throws<InvalidDataContractException>(() =>
+        {
+            serializer.WriteObject(new MemoryStream(), new UnspecifiedRootSerializationType());
+        });
+    }
+
+    [Fact]
+    public static void DCS_InvalidDataContract_Write_Invalid_Types_Throws()
+    {
+        // Attempting to serialize any invalid type should create an InvalidDataContract that throws
+        foreach (NetNativeTestData td in NetNativeTestData.InvalidTypes)
+        {
+            object o = td.Instantiate();
+            DataContractSerializer dcs = new DataContractSerializer(o.GetType());
+            MemoryStream ms = new MemoryStream();
+
+            Assert.Throws<InvalidDataContractException>(() =>
+            {
+                dcs.WriteObject(ms, o);
+            });
+        }
+    }
+
+    [Fact]
+    public static void DCS_InvalidDataContract_Read_Invalid_Types_Throws()
+    {
+        // Attempting to deserialize any invalid type should create an InvalidDataContract that throws
+        foreach (NetNativeTestData td in NetNativeTestData.InvalidTypes)
+        {
+            DataContractSerializer dcs = new DataContractSerializer(td.Type);
+            MemoryStream ms = new MemoryStream();
+            new DataContractSerializer(typeof(string)).WriteObject(ms, "test");
+            var str = new StreamReader(ms).ReadToEnd();
+
+            ms.Position = 0;
+            ms.Seek(0L, SeekOrigin.Begin);
+
+            Assert.Throws<InvalidDataContractException>(() =>
+            {
+                dcs.ReadObject(ms);
+            });
+        }
+    }
+
+    [Fact]
+    public static void DCS_NativeDll()
+    {
+        NativeDllWrapper.CallIntoNativeDll();
+    }
+
+    [Fact]
+    public static void DCS_ReadOnlyDictionaryCausingDuplicateInvalidDataContract()
+    {
+        var dict = new Dictionary<string, int>();
+        dict["Foo"] = 1;
+        dict["Bar"] = 2;
+        ReadOnlyDictionary<string, int> value = new ReadOnlyDictionary<string, int>(dict);
+        var deserializedValue = SerializeAndDeserialize(value, @"<ReadOnlyDictionaryOfstringint xmlns=""http://schemas.datacontract.org/2004/07/System.Collections.ObjectModel"" xmlns:i=""http://www.w3.org/2001/XMLSchema-instance""><_dictionary xmlns:a=""http://schemas.microsoft.com/2003/10/Serialization/Arrays""><a:KeyValueOfstringint><a:Key>Foo</a:Key><a:Value>1</a:Value></a:KeyValueOfstringint><a:KeyValueOfstringint><a:Key>Bar</a:Key><a:Value>2</a:Value></a:KeyValueOfstringint></_dictionary></ReadOnlyDictionaryOfstringint>");
+
+        Assert.StrictEqual(value.Count, deserializedValue.Count);
+        Assert.StrictEqual(value["Foo"], deserializedValue["Foo"]);
+        Assert.StrictEqual(value["Bar"], deserializedValue["Bar"]);
+
+        DataContractJsonSerializer dcjs = new DataContractJsonSerializer(typeof(ReadOnlyDictionary<string, int>));
+        MemoryStream stream = new MemoryStream();
+        dcjs.WriteObject(stream, value);
+    }
+
+    #endregion
+
     private static T SerializeAndDeserialize<T>(T value, string baseline, DataContractSerializerSettings settings = null, Func<DataContractSerializer> serializerFactory = null, bool skipStringCompare = false)
     {
         DataContractSerializer dcs;

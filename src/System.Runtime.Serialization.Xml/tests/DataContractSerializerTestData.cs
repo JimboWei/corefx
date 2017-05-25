@@ -8,7 +8,7 @@ using System.Linq;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
-
+using System.Runtime.InteropServices;
 
 // Invalid because there is no parameterless ctor
 public class Invalid_Class_No_Parameterless_Ctor
@@ -18,4 +18,27 @@ public class Invalid_Class_No_Parameterless_Ctor
         ID = id;
     }
     public string ID { get; set; }
+}
+
+public class NativeDllWrapper
+{
+
+#pragma warning disable 649
+    internal struct MyStruct
+    {
+        internal int field1;
+        internal int field2;
+    }
+#pragma warning restore
+
+    [DllImport("NativeDll.dll")]
+    internal static extern int StructInAndOutTest(MyStruct myStruct, out MyStruct outMyStruct);
+
+    public static int CallIntoNativeDll()
+    {
+        MyStruct myStruct = new MyStruct();
+        myStruct.field1 = 1;
+        myStruct.field2 = 2;
+        return myStruct.field1;
+    }
 }
