@@ -4356,6 +4356,33 @@ public static partial class DataContractSerializerTests
         SerializationTestTypes.ComparisonHelper.CompareRecursively(valueSerPublicDatasetPrivate, resultSerPublicDatasetPrivate);
     }
 
+    [Fact]
+    public static void DCS_DCS_BasicPerSerializerRoundTripAndCompare_SampleTypes_ICollectionAnalysis()
+    {
+        var setting = new DataContractSerializerSettings()
+        {
+            DataContractResolver = new SerializationTestTypes.SimpleResolver()
+        };
+
+        //DC
+        string baselineDC = @"<ObjectContainer xmlns=""http://schemas.datacontract.org/2004/07/SerializationTestTypes"" xmlns:i=""http://www.w3.org/2001/XMLSchema-instance""><_data z:Id=""i1"" i:type=""a:SerializationTestTypes.DC***"" xmlns:z=""http://schemas.microsoft.com/2003/10/Serialization/"" xmlns:a=""http://schemas.datacontract.org/2004/07/SerializationTestTypes.DC***""><Data>Monday, January 1, 0001</Data><Next i:nil=""true""/></_data><_data2 z:Ref=""i1"" xmlns:z=""http://schemas.microsoft.com/2003/10/Serialization/""/></ObjectContainer>";
+        var valueDC = new SerializationTestTypes.ObjectContainer(new SerializationTestTypes.DC());
+        var resultDC = SerializeAndDeserialize(valueDC, baselineDC, setting);
+        SerializationTestTypes.ComparisonHelper.CompareRecursively(valueDC, resultDC);
+
+        //SampleICollectionTImplicitWithoutDC
+        string baselineSampleICollectionTImplicitWithoutDC = @"<ObjectContainer xmlns=""http://schemas.datacontract.org/2004/07/SerializationTestTypes"" xmlns:i=""http://www.w3.org/2001/XMLSchema-instance""><_data i:type=""a:SerializationTestTypes.SampleICollectionTImplicitWithoutDC***"" xmlns:a=""http://schemas.datacontract.org/2004/07/SerializationTestTypes.SampleICollectionTImplicitWithoutDC***""><DC z:Id=""i1"" xmlns:z=""http://schemas.microsoft.com/2003/10/Serialization/""><Data>Monday, January 1, 0001</Data><Next i:nil=""true""/></DC><DC z:Id=""i2"" xmlns:z=""http://schemas.microsoft.com/2003/10/Serialization/""><Data>Monday, January 1, 0001</Data><Next i:nil=""true""/></DC><DC z:Ref=""i1"" xmlns:z=""http://schemas.microsoft.com/2003/10/Serialization/""/></_data><_data2 i:type=""a:SerializationTestTypes.SampleICollectionTImplicitWithoutDC***"" xmlns:a=""http://schemas.datacontract.org/2004/07/SerializationTestTypes.SampleICollectionTImplicitWithoutDC***""><DC z:Ref=""i1"" xmlns:z=""http://schemas.microsoft.com/2003/10/Serialization/""/><DC z:Ref=""i2"" xmlns:z=""http://schemas.microsoft.com/2003/10/Serialization/""/><DC z:Ref=""i1"" xmlns:z=""http://schemas.microsoft.com/2003/10/Serialization/""/></_data2></ObjectContainer>";
+        var valueSampleICollectionTImplicitWithoutDC = new SerializationTestTypes.ObjectContainer(new SerializationTestTypes.SampleICollectionTImplicitWithoutDC(true));
+        var resultSampleICollectionTImplicitWithoutDC = SerializeAndDeserialize(valueSampleICollectionTImplicitWithoutDC, baselineSampleICollectionTImplicitWithoutDC, setting);
+        SerializationTestTypes.ComparisonHelper.CompareRecursively(valueSampleICollectionTImplicitWithoutDC, resultSampleICollectionTImplicitWithoutDC);
+
+        //SampleICollectionTExplicitWithoutDC
+        string baselineSampleICollectionTExplicitWithoutDC = @"<ObjectContainer xmlns=""http://schemas.datacontract.org/2004/07/SerializationTestTypes"" xmlns:i=""http://www.w3.org/2001/XMLSchema-instance""><_data i:type=""a:SerializationTestTypes.SampleICollectionTExplicitWithoutDC***"" xmlns:a=""http://schemas.datacontract.org/2004/07/SerializationTestTypes.SampleICollectionTExplicitWithoutDC***""><DC z:Id=""i1"" i:type=""b:SerializationTestTypes.DC***"" xmlns:z=""http://schemas.microsoft.com/2003/10/Serialization/"" xmlns:b=""http://schemas.datacontract.org/2004/07/SerializationTestTypes.DC***""><Data>Monday, January 1, 0001</Data><Next i:nil=""true""/></DC><DC z:Id=""i2"" i:type=""b:SerializationTestTypes.DC***"" xmlns:z=""http://schemas.microsoft.com/2003/10/Serialization/"" xmlns:b=""http://schemas.datacontract.org/2004/07/SerializationTestTypes.DC***""><Data>Monday, January 1, 0001</Data><Next i:nil=""true""/></DC><DC z:Ref=""i1"" xmlns:z=""http://schemas.microsoft.com/2003/10/Serialization/""/></_data><_data2 i:type=""a:SerializationTestTypes.SampleICollectionTExplicitWithoutDC***"" xmlns:a=""http://schemas.datacontract.org/2004/07/SerializationTestTypes.SampleICollectionTExplicitWithoutDC***""><DC z:Ref=""i1"" xmlns:z=""http://schemas.microsoft.com/2003/10/Serialization/""/><DC z:Ref=""i2"" xmlns:z=""http://schemas.microsoft.com/2003/10/Serialization/""/><DC z:Ref=""i1"" xmlns:z=""http://schemas.microsoft.com/2003/10/Serialization/""/></_data2></ObjectContainer>";
+        var valueSampleICollectionTExplicitWithoutDC = new SerializationTestTypes.ObjectContainer(new SerializationTestTypes.SampleICollectionTExplicitWithoutDC(true));
+        var resultSampleICollectionTExplicitWithoutDC = SerializeAndDeserialize(valueSampleICollectionTExplicitWithoutDC, baselineSampleICollectionTExplicitWithoutDC, setting, skipStringCompare: true);
+        SerializationTestTypes.ComparisonHelper.CompareRecursively(valueSampleICollectionTExplicitWithoutDC, resultSampleICollectionTExplicitWithoutDC);
+
+    }
 
     [Fact]
     public static void DCS_BasicPerSerializerRoundTripAndCompare_Collections()
