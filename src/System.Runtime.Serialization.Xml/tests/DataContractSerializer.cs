@@ -2,7 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using SerializationTestTypes;
 using SerializationTypes;
 using System;
 using System.Collections;
@@ -3155,17 +3154,17 @@ public static partial class DataContractSerializerTests
         var value = new SampleICollectionTExplicitWithoutDC(true);
         SampleICollectionTExplicitWithoutDC roundtripObject = SerializeAndDeserialize(value, string.Empty, skipStringCompare: true);
         Assert.NotNull(roundtripObject);
-        ComparisonHelper.CompareRecursively(value, roundtripObject);
+        SerializationTestTypes.ComparisonHelper.CompareRecursively(value, roundtripObject);
 
         string netcorePayload = "<SampleICollectionTExplicitWithoutDC xmlns=\"http://schemas.datacontract.org/2004/07/\" xmlns:i=\"http://www.w3.org/2001/XMLSchema-instance\"><DC z:Id=\"i1\" xmlns:z=\"http://schemas.microsoft.com/2003/10/Serialization/\"><Data>Monday, January 1, 0001</Data><Next i:nil=\"true\"/></DC><DC z:Id=\"i2\" xmlns:z=\"http://schemas.microsoft.com/2003/10/Serialization/\"><Data>Monday, January 1, 0001</Data><Next i:nil=\"true\"/></DC><DC z:Ref=\"i1\" xmlns:z=\"http://schemas.microsoft.com/2003/10/Serialization/\"/></SampleICollectionTExplicitWithoutDC>";
         var deserializedNetcoreObject = DeserializeString<SampleICollectionTExplicitWithoutDC>(netcorePayload);
         Assert.NotNull(deserializedNetcoreObject);
-        ComparisonHelper.CompareRecursively(value, deserializedNetcoreObject);
+        SerializationTestTypes.ComparisonHelper.CompareRecursively(value, deserializedNetcoreObject);
 
         string desktopPayload = "<SampleICollectionTExplicitWithoutDC xmlns=\"http://schemas.datacontract.org/2004/07/\" xmlns:i=\"http://www.w3.org/2001/XMLSchema-instance\"><DC z:Id=\"i1\" i:type=\"DC\" xmlns:z=\"http://schemas.microsoft.com/2003/10/Serialization/\"><Data>Monday, January 1, 0001</Data><Next i:nil=\"true\"/></DC><DC z:Id=\"i2\" i:type=\"DC\" xmlns:z=\"http://schemas.microsoft.com/2003/10/Serialization/\"><Data>Monday, January 1, 0001</Data><Next i:nil=\"true\"/></DC><DC z:Ref=\"i1\" xmlns:z=\"http://schemas.microsoft.com/2003/10/Serialization/\"/></SampleICollectionTExplicitWithoutDC>";
         var deserializedDesktopObject = DeserializeString<SampleICollectionTExplicitWithoutDC>(desktopPayload);
         Assert.NotNull(deserializedDesktopObject);
-        ComparisonHelper.CompareRecursively(value, deserializedDesktopObject);
+        SerializationTestTypes.ComparisonHelper.CompareRecursively(value, deserializedDesktopObject);
     }
 
     [Fact]
