@@ -3036,8 +3036,31 @@ public static partial class DataContractSerializerTests
     }
 
     [Fact]
+    public static void DCS_ArrayTest()
+    {
+        //variation 1
+        var value = new ArrayList();
+        var setting = new DataContractSerializerSettings()
+        {
+            PreserveObjectReferences = true
+        };
+        string baseline = @"<ArrayOfanyType z:Id=""1"" z:Size=""0"" xmlns=""http://schemas.microsoft.com/2003/10/Serialization/Arrays"" xmlns:i=""http://www.w3.org/2001/XMLSchema-instance"" xmlns:z=""http://schemas.microsoft.com/2003/10/Serialization/""/>";
+
+        var actual = SerializeAndDeserialize(value, baseline, setting);
+        SerializationTestTypes.ComparisonHelper.CompareRecursively(value, actual);
+
+        //variation 2
+        //TestObjectInObjectContainerWithSimpleResolver(new SerializationTestTypes.ArrayListWithCDCFilledPublicTypes(true), @"<ObjectContainer xmlns=""http://schemas.datacontract.org/2004/07/SerializationTestTypes"" xmlns:i=""http://www.w3.org/2001/XMLSchema-instance""><_data z:Id=""i1"" i:type=""a:SerializationTestTypes.ArrayListWithCDCFilledPublicTypes***"" xmlns:z=""http://schemas.microsoft.com/2003/10/Serialization/"" xmlns:a=""http://schemas.datacontract.org/2004/07/SerializationTestTypes.ArrayListWithCDCFilledPublicTypes***""><List xmlns:b=""http://schemas.microsoft.com/2003/10/Serialization/Arrays""><b:anyType z:Id=""i2"" i:type=""c:SerializationTestTypes.PublicDC***"" xmlns:c=""http://schemas.datacontract.org/2004/07/SerializationTestTypes.PublicDC***""><Data>55cb1688-dec7-4106-a6d8-7e57590cb20a</Data></b:anyType><b:anyType z:Id=""i3"" i:type=""c:SerializationTestTypes.PublicDCClassPublicDM***"" xmlns:c=""http://schemas.datacontract.org/2004/07/SerializationTestTypes.PublicDCClassPublicDM***""><Data>No change</Data></b:anyType></List></_data><_data2 z:Ref=""i1"" xmlns:z=""http://schemas.microsoft.com/2003/10/Serialization/""/></ObjectContainer>");
+
+    }
+
+    [Fact]
     public static void DCS_BasicRoundtripDCRDefaultCollections()
     {
+        //variation 2
+        //TestObjectInObjectContainerWithSimpleResolver(new SerializationTestTypes.ArrayListWithCDCFilledPublicTypes(true), @"<ObjectContainer xmlns=""http://schemas.datacontract.org/2004/07/SerializationTestTypes"" xmlns:i=""http://www.w3.org/2001/XMLSchema-instance""><_data z:Id=""i1"" i:type=""a:SerializationTestTypes.ArrayListWithCDCFilledPublicTypes***"" xmlns:z=""http://schemas.microsoft.com/2003/10/Serialization/"" xmlns:a=""http://schemas.datacontract.org/2004/07/SerializationTestTypes.ArrayListWithCDCFilledPublicTypes***""><List xmlns:b=""http://schemas.microsoft.com/2003/10/Serialization/Arrays""><b:anyType z:Id=""i2"" i:type=""c:SerializationTestTypes.PublicDC***"" xmlns:c=""http://schemas.datacontract.org/2004/07/SerializationTestTypes.PublicDC***""><Data>55cb1688-dec7-4106-a6d8-7e57590cb20a</Data></b:anyType><b:anyType z:Id=""i3"" i:type=""c:SerializationTestTypes.PublicDCClassPublicDM***"" xmlns:c=""http://schemas.datacontract.org/2004/07/SerializationTestTypes.PublicDCClassPublicDM***""><Data>No change</Data></b:anyType></List></_data><_data2 z:Ref=""i1"" xmlns:z=""http://schemas.microsoft.com/2003/10/Serialization/""/></ObjectContainer>");
+
+        //variation 4
         var defaultCollections = new SerializationTestTypes.DefaultCollections();
         var setting = new DataContractSerializerSettings()
         {
@@ -3048,9 +3071,12 @@ public static partial class DataContractSerializerTests
 
         var actual = SerializeAndDeserialize(defaultCollections, baseline, setting);
         SerializationTestTypes.ComparisonHelper.CompareRecursively(defaultCollections, actual);
+
+        //variation 3
+        TestObjectInObjectContainerWithSimpleResolver(new SerializationTestTypes.DCHashtableContainerPublic(true), "", skipStringCompare: true);
     }
 
-#endregion
+    #endregion
 
     [Fact]
     public static void DCS_TypeWithVirtualGenericProperty()
@@ -3280,5 +3306,17 @@ public static partial class DataContractSerializerTests
     private static string getCheckFailureMsg(string propertyName)
     {
         return string.Format(s_errorMsg, propertyName);
+    }
+
+    private static void TestObjectInObjectContainerWithSimpleResolver<T>(T o, string baseline, bool skipStringCompare = false)
+    {
+        var setting = new DataContractSerializerSettings()
+        {
+            DataContractResolver = new SerializationTestTypes.SimpleResolver()
+        };
+
+        var value = new SerializationTestTypes.ObjectContainer(o);
+        var actual = SerializeAndDeserialize(value, baseline, setting, skipStringCompare: skipStringCompare);
+        SerializationTestTypes.ComparisonHelper.CompareRecursively(value, actual);
     }
 }
