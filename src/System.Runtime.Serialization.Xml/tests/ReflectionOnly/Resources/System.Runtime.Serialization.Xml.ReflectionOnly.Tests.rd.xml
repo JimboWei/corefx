@@ -14,11 +14,19 @@
       <Type Name="List" Dynamic="Required All" />
       <Type Name="Queue" Dynamic="Required All" />
       <Type Name="Stack" Dynamic="Required All" />
-      <Type Name="SortedList" Dynamic="Required All" />       
+      <Type Name="SortedList" Dynamic="Required All" />
+      <Type Name="ICollection" Dynamic="Required All" />
+      <Type Name="ICollection&lt;T&gt;" Dynamic="Required All" />
+      <Type Name="IList&lt;T&gt;" Dynamic="Required All" />
     </Namespace>
     <Namespace Name="System.Collections.Generic">
       <Type Name="Queue`1" Dynamic="Required All" />
       <Type Name="Stack`1" Dynamic="Required All" />
+      <Type Name="List" Dynamic="Required All" />
+      <Type Name="IList" Dynamic="Required All" />
+      <Type Name="ICollection" Dynamic="Required All" />
+      <Type Name="ICollection&lt;T&gt;" Dynamic="Required All" />
+      <Type Name="IList&lt;T&gt;" Dynamic="Required All" />
     </Namespace>
     <Namespace Name="System.Collections.ObjectModel">
       <Type Name="ReadOnlyCollection`1" Dynamic="Required All" />
